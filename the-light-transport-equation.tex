@@ -1,7 +1,7 @@
 \documentclass[a4paper]{article}
 \usepackage{graphicx, framed, caption, amsmath, xeCJK, indentfirst}
-\setCJKmainfont{Source Han Serif CN}
-\title{Physically Based Rendering 14.4 译文\\
+%\setCJKmainfont{Source Han Serif CN}
+\title{Physically Based Rendering 14.4\\
 光传输方程}
 \date{\today}
 \author{译者：郑延}
@@ -144,7 +144,7 @@
 
 	将这些函数代入光传输方程，同时转换成面积积分形式，我们就有：
 	\begin{equation}
-		L(p^\prime \rightarrow p)=L_e(p^\prime\rightarrow p)+\int_A f(p^{\prime\prime} \rightarrow p^\prime \rightarrow p)L(p^{\prime\prime}\rightarrow p{\prime})G(p^{\prime\prime}\leftrightarrow p^\prime)dA(p^{\prime\prime})
+		L(p^\prime \rightarrow p)=L_e(p^\prime\rightarrow p)+\int_A f(p^{\prime\prime} \rightarrow p^\prime \rightarrow p)L(p^{\prime\prime}\rightarrow p^{\prime})G(p^{\prime\prime}\leftrightarrow p^\prime)dA(p^{\prime\prime})
 		\label{eq:area-int}
 	\end{equation}
 	这里$A$是场景中所有的表面。
@@ -235,15 +235,14 @@
 	而那个算法所使用的密度估计之所以能够在diffuse表面上带来很好的效果，是因为散射的辐射量只依赖于表面的位置，所以只需要存储一个2d辐射的离散表。
 	但是当要处理glossy表面时，其他的技术比如路径追踪会更适合。
 	
-	因为我们想要推导的负责所有可能的散射模式的光线传输算法，而不想忽略或者重复计算任何散射模式，
-	所以，仔细地搞明白特定的算法属于LTE的哪一部分是很重要的。
+	因为我们想要推导的是处理所有的，而非忽略或重复计算散射模式的光线传输算法，所以，仔细地搞明白特定的算法属于LTE的哪一部分是很重要的。
 	一个很好的方法是将LTE分割成好几部分，比如说，我们可以将路径的求和部分展开为：
 	\begin{equation*}
 		L\left(\mathrm{p}_{1} \rightarrow \mathrm{p}_{0}\right)=P\left(\overline{\mathrm{p}}_{1}\right)+P\left(\overline{\mathrm{p}}_{2}\right)+\sum_{i=3}^{\infty} P\left(\overline{\mathrm{p}}_{i}\right)
 	\end{equation*}
 	第一项可以简单地计算$p_1$的发射辐射，第二项可以由精确的直接光照算法技术来解决。
-	剩下的项需要采用较快但是不精确的方法，如果这些附加的项对于所有的辐射量而言的贡献非常小，那么这是一个值得接受的妥协。
-	特别需要注意的一点是，算法必须小心地保证$P(\overline{p}_1)$和$P(\overline{p}_2)$中没有涉及$P(\overline{p}_3)$以及其余的项的部分。
+	剩下的项可以采用较快但是不精确的方法，如果这些附加的项对于所有的辐射量而言的贡献非常小，那么这是一个值得接受的妥协。
+	特别需要注意的一点是，算法必须小心地保证$P(\overline{p}_1)$和$P(\overline{p}_2)$中没有包含涉及$P(\overline{p}_3)$以及其余的项的部分。
 
 	分割独立的$P(\overline{p}_n)$项也是很有用的。
 	比如说，我们可能想要将发射辐射的项分割成来自较小的光源的$L_{e,s}$和来自较大的光源的$L_{e,l}$，给出两个分离的积分式：
@@ -257,8 +256,8 @@
 	这两个积分式可以被独立计算，可能使用完全不同的算法或不同的抽样数，使其可以很好地处理不同的情况。
 	只要$L_{e,s}$积分式忽略了大光源，且$L_{e,l}$忽略了小光源，那么所有的光源都被正确分类为了“小”或者“大”，最终就可以计算出正确的结果。
 
-	当然，BSDF也可以被分割（事实上，在章节8.1中介绍的将BSDF分类为不同的BxDFType，正是应用了这个）。
-	比如说，如果将BSDF由delta函数所表示的组件记作$f_{\Delta}$，把其余的组件记作$f_{\neg\Delta}$：
+	当然，BSDF的项也可以被分割（事实上，在章节8.1中介绍的将BSDF分类为不同的BxDFType，正是应用了这个方法）。
+	比如说，如果将BSDF由delta函数所表示的组件记作$f_{\Delta}$，把其余的组件记作$f_{\neg\Delta}$，那么：
 	\begin{multline*}
 		P\left(\overline{\mathrm{p}}_{n}\right)=\int_{A^{n-1}} L_{\mathrm{e}}\left(\mathrm{p}_{\mathrm{n}} \rightarrow \mathrm{p}_{\mathrm{n}-1}\right) \\
 		\times \prod_{i=1}^{n-1}\left(f_{\Delta}\left(\mathrm{p}_{\mathrm{i}+1} \rightarrow \mathrm{p}_{\mathrm{i}} \rightarrow \mathrm{p}_{\mathrm{i}-1}\right)+f_{\neg \Delta}\left(\mathrm{p}_{\mathrm{i}+1} \rightarrow \mathrm{p}_{\mathrm{i}} \rightarrow \mathrm{p}_{\mathrm{i}-1}\right)\right) \\
