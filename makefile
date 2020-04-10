@@ -1,20 +1,16 @@
-from-svg = build/radiance-along-ray.eps build/three-point-form.eps build/path-annotated-1.eps
-svg-to-eps = ./svg-to-eps.sh
+svg = $(wildcard *.svg)
+tex = $(wildcard *.tex)
+eps-from-svg = $(patsubst %.svg,build/%.eps,$(svg))
+pdf = $(patsubst %.tex,build/%.pdf,$(tex))
 
-the-light-transport-equation.pdf: the-light-transport-equation.tex $(from-svg)
-	cd build; latexmk -xelatex -quiet ../the-light-transport-equation.tex
+$(pdf): build/%.pdf: %.tex $(eps-from-svg) build/.build
+	cd build; xelatex ../$<
 
-build/radiance-along-ray.eps: build/. radiance-along-ray.svg
-	$(svg-to-eps) radiance-along-ray.svg build/radiance-along-ray.eps
+$(eps-from-svg): build/%.eps: %.svg build/.build
+	inkscape $< -E $@ --export-ignore-filters --export-ps-level=3
 
-build/three-point-form.eps: three-point-form.svg
-	$(svg-to-eps) three-point-form.svg build/three-point-form.eps
-
-build/path-annotated-1.eps: path-annotated-1.svg
-	$(svg-to-eps) path-annotated-1.svg build/path-annotated-1.eps
-
-build/.: 
-	mkdir -p build
+build/.build: 
+	mkdir -p build; touch build/.build
 
 watch:
 	while true; do\
@@ -26,4 +22,3 @@ watch:
 
 clean:
 	-rm -r build
-
